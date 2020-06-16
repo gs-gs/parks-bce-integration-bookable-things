@@ -298,25 +298,18 @@ to hit it as often as they like.
    get_availability -> BCE: json data
 
 
-.. http:get:: /bookables/(bookable_id)/slots/?from=(date: from_date)&until=(date: to_date)
+.. http:get:: /bookables/(bookable_id)/slots/?from=(datetimeZ)&until=(datetimeZ)
 
    Returns a list of available time slots
    for a bookable thing,
    within the given date range.
 
-   If no "from" parameter given then all slots since the current one (which may
-   be already started and thus not available for booking). Slot start time is used.
+   If no "from" parameter is given then all slots since the current one (which may
+   be already started and thus not available for booking) are returned.
+   Filter is performed using the slot end time.
 
-   "from" and "until" dates are inclusive,
-   i.e. from today includes today's availabilities,
-   and until tomorrow includes tomorrow's.
-
-   The "from" and "until" parameters
-   may be an ISO-8601 date string (`YYYY-MM-DD`).
-   Having dates here help us to cache things,
-   please do more detailed filtering on the client side.
-   Regarding the timezone: the server timezone will be used, so for night
-   events it's practical to get the previous and the next days (if you are not sure).
+   "from" and "until" datetimes are inclusive. They muse be provided in ISO format
+   with mandatory UTC timezone (example: ``2020-05-28T17:00:00Z``)
 
    If no "until" parameter is given,
    then either for all of the future
