@@ -435,8 +435,8 @@ Implemented: except filters (but the created-received should work).
     Please note that reservation object has informational readonly fields start_time
     and end_time; you can't update them and they are filled automatically from the first
     slot start time and the last slot end time respectively, reflecting the full
-    time period of traveller visiting the event. The filters work based on these
-    fields (filtering only by start time date)
+    time period of traveller visiting the event. The date filters work based on these
+    fields (so only reservations which are active for the filtering period are returned). Default "from" value is today, "until" is some date in the far future.
 
     Response example::
 
