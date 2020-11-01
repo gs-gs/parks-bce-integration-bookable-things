@@ -114,6 +114,11 @@ Products list
   ``is_archived`` parameter is false by default and can be used to access archived
   products (if you set it to all or true). They are hidden by default.
 
+  ``spaces_required`` - contain list (possibly empty) of spaces which are booked for each
+  reservation for this product; having them busy stops the reservation placement process.
+  Please note that although sub-keys like ``index`` or ``minutes`` are present they aren't fully
+  supported. See spaces list endpoint for getting their list with readable name and some details.
+
   In case of wrong filters parameter (park doesn't exist, org doesn't exist)
   empty results set will be returned (except the is_archived parameter where the value
   is strictly validated to be one of all, true or false).
@@ -137,6 +142,15 @@ Products list
           "unit": "person",
           "cost_per_unit": "6.00",
           "is_archived": false,
+          "spaces_required": [
+            {
+              "space_id": "some-uuid-of-the-space",
+              "index": 1,
+              "index_percentage": 100,
+              "minutes": null,
+              "start_from_minutes": 0
+            }
+          ]
         },
         {
           "id": 1,
@@ -150,6 +164,15 @@ Products list
           "unit": "person",
           "cost_per_unit": "21.00",
           "is_archived": false,
+          "spaces_required": [
+            {
+              "space_id": "some-uuid-of-the-space",
+              "index": 1,
+              "index_percentage": 100,
+              "minutes": null,
+              "start_from_minutes": 0
+            }
+          ]
         }
       ]
     }
@@ -186,13 +209,18 @@ Product creation
         "park": "kakadu",
         "short_description": "night walk",
         "cost_per_unit": "55.00",
-        "image": "(full image url goes here - see notes"
+        "image": "(full image url goes here - see notes",
+        "spaces_required": [the same format as the product list]
     }
 
   Success response: the same as the Products list endpoint but without pagination.
 
   Note about the image: it's a text field where you should pass the exact absolute url
   what has been returned to you by the image upload endpoint. No other urls will be accepted for security reasons. The field is optional.
+
+  The field ``spaces_required`` is optional and once provided will make the system place
+  space reservations along with the product reservation. Please note that once provided
+  the busy space will block the reservation creation.
 
 
   Error response example::
@@ -613,3 +641,77 @@ List response example::
     ]
   }
 
+
+
+Spaces list
+~~~~~~~~~~~
+
+.. http:get:: /spaces/
+
+  .. code-block:: gherkin
+
+    As a user
+    I'd like to get detailed information about spaces
+    Which products may be linked to
+    So I'm aware of these physical aspects
+
+Response example::
+
+  {
+      "count": 1,
+      "next": None,
+      "previous": None,
+      "results": [
+        {
+          'name': "The viewing platform",
+          'park': "uluru",
+          'short_description': "A platform which offers beautiful view on the object",
+          'created_by_org': 'Entry Station',
+          'created_at': "iso format datetime with timezone",
+          'id': "UUID of the space",
+          'image': '',
+          'visible_to_orgs': "org name 1,org name 2, org name 3",
+          'is_indoor': False,
+          'is_public': True,
+          'capacity': [
+              {"unit": "person", "qty": 20},
+              {"unit": "bus", "qty": 1},
+          ]
+        }
+      ]
+  }
+
+Fields::
+
+  * created_by_org - any space has the owner, usually it's park own organisations
+  * visible_to_orgs - in case of non-public spaces only set list of organisations + the owner see it
+  * is_indoor is just an informational field
+  * capacity is informational field without any logic constraints currently
+
+
+Spaces list
+~~~~~~~~~~~
+
+.. http:get:: /spaces/{space_id}/reservations/
+
+  .. code-block:: gherkin
+
+    As a user
+    I'd like to get the information about space reservation calendar
+    To be aware when it's busy and when it's not
+
+Filters::
+
+  * GET parameters ``from`` and ``until`` like the reservations list endpoint
+
+Response example::
+
+    [
+      {
+        'space_reservation_id': "uuid",
+        'product_reservation_id': "uuid (another)",
+        'start_time': "iso datetime",
+        'end_time': "iso datetime",
+      },
+      ...
+    ]
