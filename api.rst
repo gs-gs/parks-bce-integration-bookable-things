@@ -1,5 +1,5 @@
-API Requirements
-================
+API documentation
+=================
 
 This shows how the API is used
 by booking Agents (such as BCE)
@@ -44,18 +44,50 @@ Base workflow
   * Agent organisation places reservations
   * Delivery org either confirms or denies reservations
 
+Terms
+-----
+
+**Delivery organisation** - the organisation created the product and offering the service
+described in it. This organisation can see all incoming reservations and information
+about agents who book it.
+
+**Agent** - organisation placing reservation for the product. The idea is that delivery org
+creates products to offer their services, and agent organisations create reservations so
+agent's clients can visit it.
+
+**Product** - description of event which happens from time to time and has extra
+information like delivery organisation, name, description and so on
+
+**Space** - physical place which can be booked for one or more product; the simplest
+case is when some product books the space linked to it fully and no other products
+can book the same place for the same time. Examples of spaces are campgrounds, wedding lawns,
+buildings and so on.
+
+**Slot** - start and end datetime pair linked to specific product; can be booked.
+
+**Reservation** - the fact of some slot booked by some organisation
+
+**SpaceReservation** - the fact of some space booked for given time; usually linked to
+product reservation and is created just after it
+
+**Reservation note** - some text used to help delivery org and agent (booking) or to communicate
+
+
 Product
 -------
-
-Tours, School excursions or Tasting events, campgrounds and so on.
 
 Interesting fields:
 
 * type - is the product offered by the official park organisation or an external partner. Informational
 * unit - has possible values "person" or "group" and helps to display on what basis the reservations are accepted. Avaiability slots (see far below) can have maximal units per reservation parameter be set (for example, 15 people or 2 groups can attend some event).
-* cost_per_unit - informational field, AUD per single unit.
-* available_to_agents (boolean) - is another organisation can place reservations. Set to False if you want to (temporary) stop accepting new reservations. The product remains visible in the list, but no slots are returned.
-* available_to_public (boolean) - the same logic, but has no meaning while we don't offer the API to public.
+* cost_per_unit - informational field, AUD per single unit. Decimal of format "xxxx.xx"
+* available_to_agents (boolean) - can another organisation place reservations? Set to False if you want to (temporary) stop accepting new reservations. The product remains visible in the list, but no slots are returned. Existing reservations are not affected by changing this flag.
+* available_to_public (boolean) - the same logic, but has no meaning while we don't offer the API to public. In the future we may have public information about product availability (calendar) and things like that. Personal data of agents placing reservations will not be shared.
+* spaces_required - contains list (possibly empty) of spaces which are booked for each
+reservation for this product; having the space busy stops the reservation placement process.
+Please note that although sub-keys like ``index`` or ``minutes`` are present they aren't fully
+supported. See spaces list endpoint for getting their list with readable name and some details.
+
 
 Products list
 ~~~~~~~~~~~~~
@@ -98,30 +130,26 @@ Products list
 
 .. http:get:: /products/?org_id=(org_id)&org_slug=(string)&park_slug=(park_slug)&is_archived=true/false/all
 
-  Returns a list of products. GET parameters are optional and filter
-  the output.
+  Returns a list of products with pagination and short information about them.
 
-  The "park_slug" is a URL-compatible string
-  that identifies the park, e.g. "anbg"
-  for the Australian National Botanic Gardens or "kakadu" or "booderee".
+  The next GET parameters (optional) are supported:
 
-  The "org_id" is a short number identifying the organisation to display only
-  products provided by the choosen one. It will be useful mostly for
-  the "Management" scenarion, and any organisation using API is aware of this
-  value for itself.
-  org_name - full organisation name (urlencoded)
+    * **park_slug** is a URL-compatible string that identifies the park, e.g. "anbg"
+      for the Australian National Botanic Gardens or "kakadu" or "booderee".
 
-  ``is_archived`` parameter is false by default and can be used to access archived
-  products (if you set it to all or true). They are hidden by default.
+    * **org_id** is a short number identifying the organisation to display only
+      products provided by the choosen one. It will be useful mostly for
+      the "Management" scenarion, and any organisation using API is aware of this
+      value for itself. See the organisations list endpoint to get variants to filter on.
 
-  ``spaces_required`` - contain list (possibly empty) of spaces which are booked for each
-  reservation for this product; having them busy stops the reservation placement process.
-  Please note that although sub-keys like ``index`` or ``minutes`` are present they aren't fully
-  supported. See spaces list endpoint for getting their list with readable name and some details.
+    * **org_name** - full organisation name (urlencoded). Exact case insensitive match.
+
+    * **is_archived** (``false`` by default) - can be used to access archived products
+      (if you set it to ``all`` or ``true``). Only active are returned by default.
 
   In case of wrong filters parameter (park doesn't exist, org doesn't exist)
   empty results set will be returned (except the is_archived parameter where the value
-  is strictly validated to be one of all, true or false).
+  is strictly validated to be one of ``all``, ``true`` or ``false``).
 
   Response example::
 
@@ -189,8 +217,8 @@ Product creation
    I want to create a "Product Thing"
    so agent organisation can book my time
 
-  The current organisation becomes ``delivery_org``. ``customer`` field will
-  be explained later. All fields not listed here are readonly or optional.
+  The current organisation becomes ``delivery_org``. ``customer`` field is mostly ignored in this version.
+  All fields not listed here are readonly or optional.
   Success is 201, error is 4xx (subject to change and specific codes will be used)
 
   Minimal request example::
@@ -307,6 +335,7 @@ Please keep your files reasonable small (a typical photo from a mobile phone whi
 The request is authenticated as usual while the image file is available without any auth
 after uploaded.
 
+This image may be used for space as well.
 
 Slots
 -----
@@ -320,8 +349,6 @@ Slots list
 ~~~~~~~~~~
 
 (check availability of product)
-
-Implemented: everything except filters.
 
 .. code-block:: gherkin
 
