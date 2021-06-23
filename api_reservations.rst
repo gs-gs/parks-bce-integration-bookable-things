@@ -43,6 +43,8 @@ Reservations list
     Users may add other keys in the future to follow their changing requirements, but should care about
     validation of that data themselves.
 
+    Root ``units`` field is deprecated but still accepted; logically better to send it as ``extra_data.units`` (for pricing types required that - person both old and new, old groups) or don't send at all (for new group pricing). Reservations created with "unit" in extra_data return it only in extra_data; ones got it as a root field return them as a root field. This may look strange for cases when reservation is accessed by another party using different kind (old/new) of API.
+
     Response example::
 
       {
@@ -62,10 +64,6 @@ Reservations list
               "image": "http://localhost:8000/media/products_images/ObQOeL8uJqY.jpg",
               "contact": "",
               "unit": "person",
-              "cost_per_unit": "6.00",
-              "minimum_units":null,
-              "minimum_minutes":null,
-              "maximum_minutes":null
             },
             "slots": [
               {
@@ -111,7 +109,10 @@ Reservations list
                 "completionData": {
                   "completedAt": "2021-02-18T17:12:35.345484+00:00"
                 },
-                "completionDataSchema": {}
+                "completionDataSchema": {},
+                "units": 1,
+                "peopleComing": 13,
+                "peopleComingBonus": 1
               }
             }
           }
@@ -131,7 +132,7 @@ In the current API version they are available both to delivery and agent orgs; a
 status to "confirmed" is available only to delivery org.
 
 Both endpoints save payloads to ``Reservation.extra_data`` field of the reservation related; you can
-update that field directly using the reservation update endpoint itself.
+update that field directly using the reservation update endpoint itself (send only new data if using this, because extra_data dict is merged, not replaced)
 
 The data is not validated against the schema yet, but it may be introduced in the future. Empty schema is fine.
 
@@ -172,12 +173,13 @@ Reservation create
     {
       "product_id": 1,
       "slots": [1, 2, 3],
-      "units": 1,
       "customer": {
         "name": "st. Martin's school"
       },
       "extra_data": {
-        "field1": "value1"
+        "field1": "value1",
+        "units": 1,
+        "peopleComing": 3
       }
     }
 
@@ -215,6 +217,10 @@ Reservation update
   * delivery org: finalise booking after fulfillment (status="completed")
   * agent: request reservation cancellation (status="cancellation_requested")
   * delivery_org: confirm reservation cancellation (status="cancelled")
+
+  If you send ``extra_data`` dict it's merged to the existing not replacing it; if existing
+  value has some fields which are not sent in the updated version they are left intact. It works only
+  for top-level keys of ``extra_data`` dict.
 
 
 Reservation notes (RNs)

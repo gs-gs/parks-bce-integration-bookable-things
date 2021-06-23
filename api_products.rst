@@ -1,7 +1,7 @@
 Products
 ========
 
-Interesting fields are:
+Interesting product fields are:
 
 * ``type`` - is the product offered by the official park organisation or an external partner. Informational
 * ``unit`` - has possible values "person" or "group" and helps to display on what basis the reservations are accepted. Availability slots (see far below) can have maximal units per reservation parameter be set (for example, 15 people or 2 groups can attend some event).
@@ -31,14 +31,15 @@ but it may change soon.
 * person:
   * product unit must be "person"
   * pricing_info dict contains pricePerPerson decimal value (required but can be 0)
-  * ``reservation price = pricing_info.pricePerPerson * units`` and `` * number_of_slots`` if multiplyPerSlot is True. Reservations placed for products with that pricing type can have multiple units.
+  * ``reservation price = pricing_info.pricePerPerson * units`` and `` * number_of_slots`` if multiplyPerSlot is True. Reservations can have multiple units.
+  * Reservation object can contain either "units" field in "extra_data" (recommended) or just root "units" field (positive integer number)
 
 * group-simple
   * product unit must be "group"
   * pricing_info dict contains pricePerGroup decimal value (required but can be 0)
   * price calculation is the same as "person" but using ``pricePerGroup`` field
-  * units per reservation value can only be 1 (reservations for 2 units at the same time are not accepted). It's done so you can provide peopleComing, peopleComingBonus values for each group separately without complicating the API; if you have 2 groups just place 2 reservations.
-  * reservations may have peopleComing and peopleComingBonus fields but they are informational
+  * units per reservation value can only be 1 (reservations for 2 units at the same time are not accepted). It's done so you can provide peopleComing, peopleComingBonus values for each group separately without complicating the API; if you have 2 groups just place 2 reservations. The default is ``1`` and an error is raised if another value is provided.
+  * reservations may have peopleComing and peopleComingBonus fields but they are informational (extra_data dict)
   * product pricing info can have maxPersonsInGroup and maxBonusPersonsInGroup (optional, default null), if positive integer set then don't allow reservations to be placed if peopleComing or peopleComingBonus is bigger than max
 
 * group-complex:
@@ -59,6 +60,14 @@ but it may change soon.
 
 
 ``pricing_info_schedule`` is a list of pairs like ["YYYY-MM-DD", {new-pricing-info}] - once given date arrives the new pricing info replaces current one. Reservations may be re-saved and change their price after that event. Reservations placed in the future consider this field when calculating their price. Please note that if you change price schedule and some already existing reservations are affected it may surprise users.
+
+It is an error to provide both new and old pricing fields for the same request; so if "pricing_info" (new) is provided then you may provide "pricing_info_schedule" but can't any of the deprecated fields (cost_per_unit, minimum_units, minimum_minutes, maximum_minutes, price_schedule)
+
+If no pricing fields are provided - no reservations prices are calculated (always zeros).
+
+If product pricing row of specific type has extra fields (unknown to the server or not applicable to given type) they are silently ignored.
+
+If you have specific pricing type you can't change it from the pricing schedule from person to group (because you need to change product unit as well). In this case just handle it manually, setting correct product unit and pricing_info and pricing_info_schedule for new fields as it need to be.
 
 **Example of price calculation:**
 
@@ -235,7 +244,7 @@ Product creation
    I want to create a "Product Thing"
    so agent organisation can book my time
 
-The current organisation becomes ``delivery_org``. ``customer`` field is mostly ignored in this version.
+The current organisation becomes ``delivery_org``.
 All fields not listed here are readonly or optional.
 Success is 201, error is 4xx (subject to change and specific codes will be used)
 
