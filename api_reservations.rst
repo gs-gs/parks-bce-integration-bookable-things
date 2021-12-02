@@ -199,6 +199,80 @@ Reservation create
   error about space busy will be raised (if failed).
 
 
+Get Reservation
+---------------
+
+.. http:get:: /reservations/{reservation_id}/
+
+    Response example::
+
+      {
+        "id": "9eefbecb-29be-441e-be13-c59870671940",
+        "product": {
+          "id": 2,
+          "type": "park",
+          "park": "kakadu",
+          "delivery_org": "Bowali",
+          "name": "Naidoc Week",
+          "short_description": "",
+          "image": "http://localhost:8000/media/products_images/ObQOeL8uJqY.jpg",
+          "contact": "",
+          "unit": "person",
+        },
+        "slots": [
+          {
+            "id": 1,
+            "start_time": "2020-05-28T12:00:00+10:00",
+            "end_time": "2020-05-28T13:00:00+10:00",
+            "max_units": 2,
+            "reserved_units": 1
+          },
+          {
+            "id": 2,
+            "start_time": "2020-05-28T17:00:00+10:00",
+            "end_time": "2020-05-28T18:00:00+10:00",
+            "max_units": 1,
+            "reserved_units": 1
+          }
+        ],
+        "agent": "Australian trade corp",
+        "units": 1,
+        "customer": null,
+        "created_at": "2020-05-28T21:14:05+10:00",
+        "status": "accepted",
+        "start_time": "2020-05-28T12:00:00+10:00",
+        "end_time": "2020-05-28T18:00:00+10:00",
+        "total_cost": "7.25",
+        "extra_data": {
+          {
+            "formData": {
+              "school": {
+                "street_address": "ABC Street",
+                "adults_attending": 1,
+                "students_attending": 1
+              },
+              "billing": {
+                "country": "AU"
+              },
+            },
+            "formVersionId": "a4883d73-02c3-4a70-844b-6d5475b79ce9",
+            "confirmationData": {
+              "confirmedAt": "2021-02-18T09:41:56.929779+00:00"
+            },
+            "confirmationDataSchema": {},
+            "completionData": {
+              "completedAt": "2021-02-18T17:12:35.345484+00:00"
+            },
+            "completionDataSchema": {},
+            "units": 1,
+            "peopleComing": 13,
+            "peopleComingBonus": 1
+          }
+        }
+      }
+
+
+
 Reservation update
 ------------------
 
